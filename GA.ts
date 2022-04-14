@@ -1,10 +1,13 @@
 import { spawn } from "child_process";
+import { stdout } from "process";
 import { eventToPromise } from "./utils";
+
+const SEP = "----";
 
 export async function runGA(data: any) {
 	const child_proc = spawn("./traffic");
 
-	child_proc.stdin.write(JSON.stringify(data) + "\n" + "----");
+	child_proc.stdin.write(JSON.stringify(data) + "\n" + SEP);
   child_proc.stdin.end();
 
 	child_proc.stdout.setEncoding("utf-8");
@@ -13,9 +16,11 @@ export async function runGA(data: any) {
 
 	child_proc.stdout.on("data", (chunk) => {
 		out += chunk;
+    stdout.write(chunk);
 	});
-
+  
 	await eventToPromise(child_proc.stdout, "end");
-
-  return JSON.parse(out);
+  
+  let parts = out.split(SEP);
+  return JSON.parse(parts[1]);
 }
