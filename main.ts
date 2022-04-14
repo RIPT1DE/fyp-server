@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 import readline from "readline";
 import { eventToPromise } from "./utils";
 import { readFile } from "fs/promises";
+import { runGA } from "./GA";
 
 readline.emitKeypressEvents(process.stdin);
 
@@ -26,7 +27,8 @@ let data = { data: [] as number[], n_timesteps: 24 };
 
 async function readData() {
 	const content = await readFile("data.json", { encoding: "utf-8" });
-	data = JSON.parse(content);
+	data = await runGA(JSON.parse(content));
+	console.log('Genetic Algo Completed!');
 }
 
 function getDataIndex(timestep: number, lane: number) {
