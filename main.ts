@@ -2,6 +2,7 @@ import http from "http";
 import { Server } from "socket.io";
 import readline from "readline";
 import { eventToPromise } from "./utils";
+import { readFile } from "fs/promises";
 
 readline.emitKeypressEvents(process.stdin);
 
@@ -17,10 +18,15 @@ server.listen(PORT, () => {
 });
 
 //GA stuff:
-const data = { chromosome: [] as number[], timesteps: 24 };
+let data = { data: [] as number[], n_timesteps: 24 };
+
+async function readData() {
+	const content = await readFile("data.json", { encoding: "utf-8" });
+	data = JSON.parse(content);
+}
 
 function getDataIndex(timestep: number, lane: number) {
-	return lane * data.timesteps + timestep;
+	return lane * data.n_timesteps + timestep;
 }
 
 process.stdin.setRawMode(true);
@@ -57,6 +63,12 @@ const run = async () => {
 				}
 				break;
 
+			case "r":
+				await readData();
+				curr_timestep = 0;
+				curr_lane = 0;
+				break;
+
 			case "l":
 				const rl = readline.createInterface({
 					input: process.stdin,
@@ -80,7 +92,7 @@ const run = async () => {
 			curr_timestep
 		);
 
-		const open = data.chromosome[getDataIndex(curr_timestep, curr_lane)] == 1;
+		const open = data.data[getDataIndex(curr_timestep, curr_lane)] == 1;
 		io.emit("data", {
 			straight: open,
 			left: false,
