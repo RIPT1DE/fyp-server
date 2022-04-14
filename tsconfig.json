@@ -1,0 +1,7 @@
+{
+	// This is an alias to @tsconfig/node12: https://github.com/tsconfig/bases
+	"extends": "@tsconfig/node14/tsconfig.json",
+	"compilerOptions": {
+    "types": ["node"]
+  }
+}
