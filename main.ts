@@ -1,9 +1,8 @@
 import http from "http";
-import { Server } from "socket.io";
+import { RemoteSocket, Server, Socket } from "socket.io";
 import readline from "readline";
 import { eventToPromise } from "./utils";
-import { readFile } from "fs/promises";
-import { runGA } from "./GA";
+import { getIndividualCarData, setCarLane, setTimestep } from "./location";
 
 readline.emitKeypressEvents(process.stdin);
 
@@ -22,18 +21,39 @@ server.listen(PORT, () => {
 	console.log("listening on " + PORT);
 });
 
-//GA stuff:
-let data = { data: [] as number[], n_timesteps: 24 };
+let joined = [] as Socket[];
 
-async function readData() {
-	const content = await readFile("data.json", { encoding: "utf-8" });
-	data = await runGA(JSON.parse(content));
-	console.log('Genetic Algo Completed!');
-}
+io.on("connection", async (socket) => {
+	const sub = getIndividualCarData(socket).subscribe((signal) => {
+		socket.emit("data", { forward: signal });
+	});
 
-function getDataIndex(timestep: number, lane: number) {
-	return lane * data.n_timesteps + timestep;
-}
+	socket.on("join", () => {
+		joined.push(socket);
+
+		socket.on("timestep", (timestep) => {
+			setTimestep(timestep);
+		});
+
+		socket.on("carLane", ({id, lane}) => {
+			setCarLane(id, lane);
+		});
+	});
+
+	socket.on("disconnect", () => {
+		sub.unsubscribe();
+		joined = joined.filter((j) => j.id != socket.id);
+	});
+
+	let sockets = await io.fetchSockets();
+	sockets = sockets.filter((s) => !joined.some((j) => j.id == s.id));
+	joined.forEach((j) => {
+		j.emit(
+			"online",
+			sockets.map((s) => s.id)
+		);
+	});
+});
 
 process.stdin.setRawMode(true);
 process.stdin.resume();
@@ -60,6 +80,7 @@ const run = async () => {
 		switch (key.name) {
 			case "right":
 				curr_timestep++;
+				setTimestep(curr_timestep);
 				break;
 
 			case "left":
@@ -67,12 +88,7 @@ const run = async () => {
 				if (curr_timestep < 0) {
 					curr_timestep = 0;
 				}
-				break;
-
-			case "r":
-				await readData();
-				curr_timestep = 0;
-				curr_lane = 0;
+				setTimestep(curr_timestep);
 				break;
 
 			case "l":
@@ -83,6 +99,11 @@ const run = async () => {
 				const [line] = await eventToPromise(rl, "line");
 
 				curr_lane = Number.parseInt(line);
+
+				const allSockets = await io.fetchSockets();
+				if (allSockets.length > 0) {
+					setCarLane(allSockets[0].id, curr_lane);
+				}
 
 				// rl.close();
 				break;
@@ -97,14 +118,6 @@ const run = async () => {
 			"Current timestep: ",
 			curr_timestep
 		);
-
-		const open = data.data[getDataIndex(curr_timestep, curr_lane)] == 1;
-		io.emit("data", {
-			straight: open,
-			left: false,
-			right: false,
-			back: false,
-		});
 	}
 };
 
