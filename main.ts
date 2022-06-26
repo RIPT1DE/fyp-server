@@ -1,6 +1,8 @@
 import http from "http";
 import { RemoteSocket, Server, Socket } from "socket.io";
 import readline from "readline";
+import express from "express";
+import cors from "cors";
 import { eventToPromise } from "./utils";
 import { getIndividualCarData, setCarLane, setTimestep } from "./location";
 
@@ -8,8 +10,18 @@ readline.emitKeypressEvents(process.stdin);
 
 //server stuff:
 const PORT = process.env.PORT || 3000;
+const app = express();
+app.use(
+	cors({
+		origin: "*",
+	})
+);
 
-const server = http.createServer();
+app.get("/", (req, res) => {
+	res.status(200).send("<h1>Hi</h1>");
+});
+
+const server = http.createServer(app);
 
 const io = new Server(server, {
 	cors: {
@@ -35,7 +47,7 @@ io.on("connection", async (socket) => {
 			setTimestep(timestep);
 		});
 
-		socket.on("carLane", ({id, lane}) => {
+		socket.on("carLane", ({ id, lane }) => {
 			setCarLane(id, lane);
 		});
 	});
