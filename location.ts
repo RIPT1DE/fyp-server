@@ -65,6 +65,9 @@ export function getIndividualCarData(socket: Socket) {
 			if (open) {
 				return CarInstruction.GREEN;
 			} else {
+				if (solution.data[getDataIndex(solution, timestep + 1, lane)]) {
+					return CarInstruction.YELLOW;
+				}
 				return CarInstruction.RED;
 			}
 		})
