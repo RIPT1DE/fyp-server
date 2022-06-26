@@ -67,70 +67,70 @@ io.on("connection", async (socket) => {
 	});
 });
 
-process.stdin.setRawMode(true);
-process.stdin.resume();
-process.stdin.setEncoding("utf-8");
+// process.stdin.setRawMode(true);
+// process.stdin.resume();
+// process.stdin.setEncoding("utf-8");
 
-let curr_timestep = 0;
-let curr_lane = 0;
+// let curr_timestep = 0;
+// let curr_lane = 0;
 
-const run = async () => {
-	while (true) {
-		const [_, key] = await eventToPromise(process.stdin, "keypress");
+// const run = async () => {
+// 	while (true) {
+// 		const [_, key] = await eventToPromise(process.stdin, "keypress");
 
-		// console.log("got key ", key);
+// 		// console.log("got key ", key);
 
-		if (!key) {
-			continue;
-		}
+// 		if (!key) {
+// 			continue;
+// 		}
 
-		//handle exit
-		if (key.ctrl && key.name == "c") {
-			process.exit(0);
-		}
+// 		//handle exit
+// 		if (key.ctrl && key.name == "c") {
+// 			process.exit(0);
+// 		}
 
-		switch (key.name) {
-			case "right":
-				curr_timestep++;
-				setTimestep(curr_timestep);
-				break;
+// 		switch (key.name) {
+// 			case "right":
+// 				curr_timestep++;
+// 				setTimestep(curr_timestep);
+// 				break;
 
-			case "left":
-				curr_timestep--;
-				if (curr_timestep < 0) {
-					curr_timestep = 0;
-				}
-				setTimestep(curr_timestep);
-				break;
+// 			case "left":
+// 				curr_timestep--;
+// 				if (curr_timestep < 0) {
+// 					curr_timestep = 0;
+// 				}
+// 				setTimestep(curr_timestep);
+// 				break;
 
-			case "l":
-				const rl = readline.createInterface({
-					input: process.stdin,
-				});
+// 			case "l":
+// 				const rl = readline.createInterface({
+// 					input: process.stdin,
+// 				});
 
-				const [line] = await eventToPromise(rl, "line");
+// 				const [line] = await eventToPromise(rl, "line");
 
-				curr_lane = Number.parseInt(line);
+// 				curr_lane = Number.parseInt(line);
 
-				const allSockets = await io.fetchSockets();
-				if (allSockets.length > 0) {
-					setCarLane(allSockets[0].id, curr_lane);
-				}
+// 				const allSockets = await io.fetchSockets();
+// 				if (allSockets.length > 0) {
+// 					setCarLane(allSockets[0].id, curr_lane);
+// 				}
 
-				// rl.close();
-				break;
+// 				// rl.close();
+// 				break;
 
-			default:
-				break;
-		}
+// 			default:
+// 				break;
+// 		}
 
-		console.log(
-			"Current lane: ",
-			curr_lane,
-			"Current timestep: ",
-			curr_timestep
-		);
-	}
-};
+// 		console.log(
+// 			"Current lane: ",
+// 			curr_lane,
+// 			"Current timestep: ",
+// 			curr_timestep
+// 		);
+// 	}
+// };
 
-run();
+// run();
